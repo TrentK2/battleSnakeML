@@ -17,6 +17,12 @@ export default function move(gameState){
         left: false,
         right: false
     }
+    let lookBypass = {
+        up: false,
+        down: false,
+        left: false,
+        right: false
+    }
     let allHazards = []
     let fINDSOMEFOODNOW = false
     function findFood(){
@@ -91,10 +97,18 @@ export default function move(gameState){
             moveBypass.down = true
         }
     }
-    if(gameState.you.health < gameState.board.height + gameState.board.width + gameState.you.length || gameState.you.length %2 != 0){
+    let longestSnake
+    gameState.board.snakes.forEach(elm => {
+        if(longestSnake < elm.length){
+            longestSnake = elm.length
+        }
+    })
+    console.log(longestSnake)
+    
+    if(gameState.you.length < longestSnake-1 || gameState.you.length < 7){
         findFood()
     } else if(gameState.you.length % 2 == 0){
-        loopSelf()
+        // loopSelf()
     }
 
     // We've included code to prevent your Battlesnake from moving backwards
@@ -114,18 +128,18 @@ export default function move(gameState){
         moveSafety.up = false;
     }
     // avoid wall
-    if(gameState.you.head.x == 0){
-        moveSafety.left = false
-    } 
-    if(gameState.you.head.y == 0){
-        moveSafety.down = false
-    } 
-    if(gameState.you.head.y+1 == gameState.board.height){
-        moveSafety.up = false
-    } 
-    if(gameState.you.head.x+1 == gameState.board.width){
-        moveSafety.right = false
-    }
+    // if(gameState.you.head.x == 0){
+    //     moveSafety.left = false
+    // } 
+    // if(gameState.you.head.y == 0){
+    //     moveSafety.down = false
+    // } 
+    // if(gameState.you.head.y+1 == gameState.board.height){
+    //     moveSafety.up = false
+    // } 
+    // if(gameState.you.head.x+1 == gameState.board.width){
+    //     moveSafety.right = false
+    // }
     for (let xL = 0; xL < gameState.board.width; xL++) {
         for (let yL = 0; yL < gameState.board.height; yL++) {
             if(xL == 0){
@@ -133,16 +147,17 @@ export default function move(gameState){
             } else if(yL == 0){
                 allHazards.push({x:xL,y:yL-1})
             } 
-            if(xL == gameState.board.width){
-                console.log(xL)
-                // allHazards.push({x:xL+1,y:yL})
-            } else if(yL == gameState.board.height){
-                // allHazards.push({x:xL,y:yL+1})
+            if(xL == gameState.board.width-1){
+                allHazards.push({x:xL+1,y:yL})
+            } else if(yL == gameState.board.height-1){
+                allHazards.push({x:xL,y:yL+1})
             }
 
             
         }
     }
+    allHazards.push({x:0,y:-1})
+    allHazards.push({x:gameState.board.width-1,y:gameState.board.height})
     function checkTrapped(x, y, doesNotMatter, element){
         if(x+1 == element.x && y == element.y && doesNotMatter != "right"){
             moveToIfNeeded.left = true
@@ -162,18 +177,18 @@ export default function move(gameState){
         let indeX = 0
         element.body.forEach(elm =>{
             if(indeX+1 != element.body.length){
-                if(gameState.you.head.x == elm.x+1 && gameState.you.head.y == elm.y){
-                    moveSafety.left = false
-                } 
-                if(gameState.you.head.y == elm.y+1 && gameState.you.head.x == elm.x){
-                    moveSafety.down = false
-                } 
-                if(gameState.you.head.y == elm.y-1 && gameState.you.head.x == elm.x){
-                    moveSafety.up = false
-                } 
-                if(gameState.you.head.x == elm.x-1 && gameState.you.head.y == elm.y){
-                    moveSafety.right = false
-                }
+                // if(gameState.you.head.x == elm.x+1 && gameState.you.head.y == elm.y){
+                //     moveSafety.left = false
+                // } 
+                // if(gameState.you.head.y == elm.y+1 && gameState.you.head.x == elm.x){
+                //     moveSafety.down = false
+                // } 
+                // if(gameState.you.head.y == elm.y-1 && gameState.you.head.x == elm.x){
+                //     moveSafety.up = false
+                // } 
+                // if(gameState.you.head.x == elm.x-1 && gameState.you.head.y == elm.y){
+                //     moveSafety.right = false
+                // }
                 checkTrapped(gameState.you.head.x-1, gameState.you.head.y, "right", elm)
                 checkTrapped(gameState.you.head.x+1, gameState.you.head.y, "left", elm)
                 checkTrapped(gameState.you.head.x, gameState.you.head.y-1, "up", elm)
@@ -185,6 +200,21 @@ export default function move(gameState){
     })
     // avoid hazards
     gameState.board.hazards.forEach(element =>{
+        // if(gameState.you.head.x == element.x+1 && gameState.you.head.y == element.y){
+        //     moveSafety.left = false
+        // } 
+        // if(gameState.you.head.y == element.y+1 && gameState.you.head.x == element.x){
+        //     moveSafety.down = false
+        // } 
+        // if(gameState.you.head.y == element.y-1 && gameState.you.head.x == element.x){
+        //     moveSafety.up = false
+        // } 
+        // if(gameState.you.head.x == element.x-1 && gameState.you.head.y == element.y){
+        //     moveSafety.right = false
+        // }
+        allHazards.push({x:element.x,y:element.y})
+    })
+    allHazards.forEach(element =>{
         if(gameState.you.head.x == element.x+1 && gameState.you.head.y == element.y){
             moveSafety.left = false
         } 
@@ -197,22 +227,59 @@ export default function move(gameState){
         if(gameState.you.head.x == element.x-1 && gameState.you.head.y == element.y){
             moveSafety.right = false
         }
-        allHazards.push({x:element.x,y:element.y})
     })
-    // allHazards.forEach(element =>{
-    //     if(gameState.you.head.x == element.x+1){
-    //         moveSafety.left = false
-    //     } 
-    //     if(gameState.you.head.y == element.y+1){
-    //         moveSafety.down = false
-    //     } 
-    //     if(gameState.you.head.y+1 == element.y-1){
-    //         moveSafety.up = false
-    //     } 
-    //     if(gameState.you.head.x+1 == element.x+1){
-    //         moveSafety.right = false
-    //     }
-    // })
+    let wtf = -1
+    function look(head, body, i, startingMove){
+        wtf++
+        if(i == 0){
+            body.pop()
+        }
+        if(i < 4){
+            if(allHazards.some(e => e.x === head.x+1 && e.y === head.y) == false && body.some(e => e.x === head.x+1 && e.y === head.y) == false){
+                if(i == 0){startingMove = "r"}
+                body.unshift({x:head.x+1,y:head.y})
+                body.pop()
+                i++
+                look({x:head.x+1,y:head.y}, body, i, startingMove)  
+            }
+            if(allHazards.some(e => e.x === head.x-1 && e.y === head.y) == false && body.some(e => e.x === head.x-1 && e.y === head.y) == false){
+                if(i == 0){startingMove = "l"}
+                body.unshift({x:head.x-1,y:head.y})
+                body.pop()
+                i++
+                look({x:head.x-1,y:head.y}, body, i, startingMove)    
+            }
+            if(allHazards.some(e => e.x === head.x && e.y === head.y+1) == false && body.some(e => e.x === head.x && e.y === head.y+1) == false){
+                if(i == 0){startingMove = "u"}
+                body.unshift({x:head.x,y:head.y+1})
+                body.pop()
+                i++
+                look({x:head.x,y:head.y+1}, body, i, startingMove)    
+            }
+            if(allHazards.some(e => e.x === head.x && e.y === head.y-1) == false && body.some(e => e.x === head.x && e.y === head.y-1) == false){
+                if(i == 0){startingMove = "d"}
+                body.unshift({x:head.x,y:head.y-1})
+                body.pop()
+                i++
+                look({x:head.x,y:head.y-1}, body, i, startingMove) 
+            }
+        } else {
+            if(startingMove == "r"){
+                lookBypass.right = true
+            } else if(startingMove == "l"){
+                lookBypass.left = true
+            } else if(startingMove == "u"){
+                lookBypass.up = true
+            } else if(startingMove == "d"){
+                lookBypass.down = true
+            }
+        }
+    }
+    look(gameState.you.head,gameState.you.body, 0)
+    console.log(wtf)
+    if(gameState.you.head.y < gameState.board.height-1){
+        // do move thing plz
+    }
     // Are there any safe moves left?
     
     //Object.keys(moveSafety) returns ["up", "down", "left", "right"]
@@ -242,7 +309,8 @@ export default function move(gameState){
             nextMove = safeMoves[0];
         }
     }
-    // console.log(allHazards)
+    console.log(lookBypass)
+    // console.log(gameState.you.body)
     console.log(`Safe: ${safeMoves}`)
     console.log(`Bypass: ${moveBypass.right},${moveBypass.left},${moveBypass.up},${moveBypass.down}`)
     console.log(`MOVE ${gameState.turn}: ${nextMove}`)
@@ -250,9 +318,7 @@ export default function move(gameState){
     return { move: nextMove };
 }
 
-// TO DO:
-// look ahead for death instances
-// focus on making death moves. good moves. and safe moves
-// currently sometimes running into wall due to moveBypass.
-// movebypass should say which move you should take if it is a safe move.
-// you can make multiple true but food should have priority over looping
+
+// to do:
+// add so goes toward other snakes when longer
+// add avoid snakes when smaller
